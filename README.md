@@ -1,6 +1,6 @@
 # Brawl Stars Wrapper (BSWrapper) - v0.1.0
 
-### FYI: I can write README's for shit so if you can do better, make a PR or Issue on Github.
+### FYI: I can't write README's very well so if you can do better, make a PR or Issue on Github.
 
 ## What is BSWrapper?
 
@@ -61,4 +61,5 @@ print(club.description) # the club description/bio seen in the game
 
 # NOTE: this is all of properties so far in the wrapper
 ```
+
 
