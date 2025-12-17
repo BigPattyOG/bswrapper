@@ -11,10 +11,10 @@ readme = "README.md"
 requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = ["requests"]
+license = "MIT"
 
 [project.urls]
 Repository = "https://github.com/BigPattyOG/bswrapper"
