@@ -1,7 +1,5 @@
 # Brawl Stars Wrapper (BSWrapper) - v0.1.0
 
-### FYI: I can't write README's very well so if you can do better, make a PR or Issue on Github.
-
 ## What is BSWrapper?
 
 BSWrapper is a user friendly API wraper for the [Brawl Stars API](https://developer.brawlstars.com). It aims to make pulling all information found in the API as easy as possibly without needing to use a 3rd party API.
