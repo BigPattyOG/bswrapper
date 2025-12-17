@@ -60,3 +60,4 @@ print(club.description) # the club description/bio seen in the game
 # NOTE: this is all of properties so far in the wrapper
 ```
 
+
