@@ -17,7 +17,7 @@ pip install bswrapper
 ```
 or in your requirements.txt, enter it as:
 ```txt
-bswrapper>=0.1.0
+bswrapper>=0.1.1
 ```
 
 ## How to use BSWrapper
