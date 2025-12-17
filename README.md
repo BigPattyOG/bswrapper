@@ -1,4 +1,4 @@
-# Brawl Stars Wrapper (BSWrapper) - v0.1.0
+# Brawl Stars Wrapper (BSWrapper) - v0.1.1
 
 ## What is BSWrapper?
 
