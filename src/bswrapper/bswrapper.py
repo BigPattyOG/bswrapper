@@ -11,7 +11,7 @@ class APIError(Exception):
         self.status_code = status_code
         self.response_text = response_text
 
-class PlayerNotFound(APIError):
+class NotFound(APIError):
     pass
 
 class Unauthorized(APIError):
@@ -77,7 +77,7 @@ class Club:
             description=data.get("description")
         )
 
-class BSWrapper:
+class BSClient:
     def __init__(
         self,
         apiKey: str,
@@ -123,15 +123,23 @@ class BSWrapper:
             # Rate limit
             if resp.status_code == 429:
                 retry_after = resp.headers.get("Retry-After")
-                ra = float(retry_after) if retry_after and retry_after.isdigit() else None
-                if attempt < self.max_retries and ra is not None:
-                    time.sleep(ra)
+                if retry_after:
+                    try:
+                        ra = float(retry_after)
+                    except ValueError:
+                        ra = 1.0 # fallback
+                else:
+                    ra = 2.0 ** attempt # exponential backoff incase not retry_after
+
+                if attempt < self.max_retries:
+                    time.sleep(ra + 0.1)
                     continue
-                raise rateLimited(429, "Rate limited", ra)
+
+                raise RateLimited(429, "Rate limited", retry_after = ra)
 
             # Other common statuses
             if resp.status_code == 404:
-                raise playerNotFound(404, "Not found", response_text=resp.text)
+                raise NotFound(404, "Not found", response_text=resp.text)
             if resp.status_code in (401, 403):
                 raise Unauthorized(resp.status_code, "Unauthorized/Forbidden", response_text=resp.text)
 
@@ -139,6 +147,12 @@ class BSWrapper:
 
         # logically unreachable
         raise APIError("Unexpected retry loop exit")
+    
+    def __enter__(self) -> "BSClient":
+        return self
+    
+    def __close__(self, exc_type, exc_val, exc_tb) -> None:
+        self.close()
 
     def getplayer(self, tag: str) -> Player:
         tag = self._normalize_tag(tag)
