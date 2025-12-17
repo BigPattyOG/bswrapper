@@ -1,4 +1,4 @@
-# Brawl Stars Wrapper (BSWrapper) - v0.1.1
+# Brawl Stars Wrapper (BSWrapper) - v0.1.2
 
 ## What is BSWrapper?
 
@@ -17,7 +17,7 @@ pip install bswrapper
 ```
 or in your requirements.txt, enter it as:
 ```txt
-bswrapper>=0.1.1
+bswrapper>=0.1.2
 ```
 
 ## How to use BSWrapper
