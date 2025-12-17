@@ -11,13 +11,13 @@ class APIError(Exception):
         self.status_code = status_code
         self.response_text = response_text
 
-class playerNotFound(APIError):
+class PlayerNotFound(APIError):
     pass
 
 class Unauthorized(APIError):
     pass
 
-class rateLimited(APIError):
+class RateLimited(APIError):
     def __init__(self, status_code: int, message: str, retry_after: float | None):
         super().__init__(status_code, message)
         self.retry_after = retry_after
