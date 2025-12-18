@@ -1,21 +1,23 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, TypedDict
-from http import HTTPStatus
 import time
+from dataclasses import dataclass
+from http import HTTPStatus
+from typing import Any, TypedDict
+
 import requests
 
-from .exceptions import APIError, NotFound, Unauthorized, RateLimited
+from .exceptions import APIError, NotFound, RateLimited, Unauthorized
 
 # [NEW] TypedDict Classes
 
-class ClubSummaryData(TypedDict, total = False):
+
+class ClubSummaryData(TypedDict, total=False):
     tag: str | None
     name: str | None
 
 
-class PlayerData(TypedDict, total = False):
+class PlayerData(TypedDict, total=False):
     tag: str | None
     name: str | None
     trophies: int | None
@@ -25,7 +27,7 @@ class PlayerData(TypedDict, total = False):
     soloVictories: int | None
 
 
-class ClubData(TypedDict, total = False):
+class ClubData(TypedDict, total=False):
     tag: str | None
     name: str | None
     trophies: int | None
@@ -34,22 +36,20 @@ class ClubData(TypedDict, total = False):
     description: str | None
 
 
-
 # Dataclasses
 
-@dataclass(slots = True)
+
+@dataclass(slots=True)
 class ClubSummary:
     tag: str | None
     name: str | None
 
     @classmethod
     def from_api(cls, data: ClubSummaryData) -> "ClubSummary":
-        return cls(
-            tag = data.get("tag"),
-            name = data.get("name")
-        )
+        return cls(tag=data.get("tag"), name=data.get("name"))
 
-@dataclass(slots = True)
+
+@dataclass(slots=True)
 class Player:
     tag: str | None
     name: str | None
@@ -68,11 +68,14 @@ class Player:
             trophies=data.get("trophies"),
             highest=data.get("highestTrophies"),
             explevel=data.get("expLevel"),
-            club=ClubSummary.from_api(club_data) if isinstance(club_data, dict) else None,
+            club=(
+                ClubSummary.from_api(club_data) if isinstance(club_data, dict) else None
+            ),
             solo=data.get("soloVictories"),
         )
-    
-@dataclass(slots = True)
+
+
+@dataclass(slots=True)
 class Club:
     tag: str | None
     name: str | None
@@ -89,26 +92,27 @@ class Club:
             trophies=data.get("trophies"),
             required=data.get("requiredTrophies"),
             type=data.get("type"),
-            description=data.get("description")
+            description=data.get("description"),
         )
+
 
 class BSClient:
     def __init__(
         self,
-        apiKey: str,
+        api_key: str,
         *,
         timeout: float = 10.0,
         max_retries: int = 1,
-        baseURL: str = "https://api.brawlstars.com/v1",
+        base_url: str = "https://api.brawlstars.com/v1",
     ):
-        self.apiKey = apiKey
-        self.baseURL = baseURL.rstrip("/")
+        self.api_key = api_key
+        self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.max_retries = max_retries
         self._session = requests.Session()
         self._session.headers.update(
             {
-                "Authorization": f"Bearer {self.apiKey}",
+                "Authorization": f"Bearer {self.api_key}",
                 "Accept": "application/json",
             }
         )
@@ -124,7 +128,7 @@ class BSClient:
         return tag
 
     def _request_json(self, endpoint: str) -> dict[str, Any]:
-        url = f"{self.baseURL}{endpoint}"
+        url = f"{self.base_url}{endpoint}"
 
         for attempt in range(self.max_retries + 1):
             try:
@@ -132,52 +136,60 @@ class BSClient:
             except requests.RequestException as e:
                 raise APIError(f"Network error: {e}") from e
 
-            if resp.status_code == HTTPStatus.OK: # was 200
+            if resp.status_code == HTTPStatus.OK:  # was 200
                 return resp.json()
 
             # Rate limit
-            if resp.status_code == HTTPStatus.TOO_MANY_REQUESTS: # was 429
+            if resp.status_code == HTTPStatus.TOO_MANY_REQUESTS:  # was 429
                 retry_after = resp.headers.get("Retry-After")
                 if retry_after:
                     try:
                         ra = float(retry_after)
                     except ValueError:
-                        ra = 1.0 # fallback
+                        ra = 1.0  # fallback
                 else:
-                    ra = 2.0 ** attempt # exponential backoff incase not retry_after
+                    ra = 2.0 ** attempt  # exponential backoff incase not retry_after
 
                 if attempt < self.max_retries:
                     time.sleep(ra + 0.1)
                     continue
 
-                raise RateLimited(int(HTTPStatus.TOO_MANY_REQUESTS), "Rate limited", retry_after = ra)
+                raise RateLimited(
+                    int(HTTPStatus.TOO_MANY_REQUESTS), "Rate limited", retry_after=ra
+                )
 
             # Other common statuses
-            if resp.status_code == HTTPStatus.NOT_FOUND: # was 404
-                raise NotFound(int(HTTPStatus.NOT_FOUND), "Not found", response_text=resp.text)
-            if resp.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}: # was 401, 403
-                raise Unauthorized(resp.status_code, "Unauthorized/Forbidden", response_text=resp.text)
+            if resp.status_code == HTTPStatus.NOT_FOUND:  # was 404
+                raise NotFound(
+                    int(HTTPStatus.NOT_FOUND), "Not found", response_text=resp.text
+                )
+            if resp.status_code in {
+                HTTPStatus.UNAUTHORIZED,
+                HTTPStatus.FORBIDDEN,
+            }:  # was 401, 403
+                raise Unauthorized(
+                    resp.status_code, "Unauthorized/Forbidden", response_text=resp.text
+                )
 
             raise APIError(resp.status_code, resp.reason, response_text=resp.text)
 
         # logically unreachable
         raise APIError("Unexpected retry loop exit")
-    
+
     def __enter__(self) -> "BSClient":
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.close()
 
-    def getplayer(self, tag: str) -> Player:
+    def get_player(self, tag: str) -> Player:
+        """Retrieve player data by tag."""
         tag = self._normalize_tag(tag)
         data = self._request_json(f"/players/%23{tag}")
         return Player.from_api(data)
 
-    def getclub(self, tag: str) -> Club:
+    def get_club(self, tag: str) -> Club:
+        """Retrieve club data by tag"""
         tag = self._normalize_tag(tag)
         data = self._request_json(f"/clubs/%23{tag}")
         return Club.from_api(data)
-    
-    
-
