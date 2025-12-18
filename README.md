@@ -1,4 +1,4 @@
-# Brawl Stars Wrapper (BSWrapper) - v0.1.2
+# Brawl Stars Wrapper (BSWrapper) - v0.2.1
 
 ## What is BSWrapper?
 
@@ -17,7 +17,7 @@ pip install bswrapper
 ```
 or in your requirements.txt, enter it as:
 ```txt
-bswrapper>=0.1.2
+bswrapper>=0.2.1
 ```
 
 ## How to use BSWrapper
@@ -25,13 +25,14 @@ bswrapper>=0.1.2
 ### Example 1: Player Data:
 
 ```py
-from bswrapper import BSWrapper
+from bswrapper import BSClient
 
-bs = BSWrapper("API_TOKEN")
+bs = BSClient("API_TOKEN")
 
 player = bs.getplayer("#TAG")
 
 print(player.name)
+print(player.tag)
 print(player.trophies) # current trophies
 print(player.club.name) # if they are in a club, if not it just shows 'None'
 print(player.club.tag) # if they are in a club, if not it just shows 'None'
@@ -45,13 +46,14 @@ print(player.solo) # amount of solo victories
 ### Example 2: Club Data:
 
 ```py
-from bswrapper import BSWrapper
+from bswrapper import BSClient
 
-bs = BSWrapper("API_TOKEN")
+bs = BSClient("API_TOKEN")
 
 club = bs.getclub("#TAG")
 
 print(club.name)
+print(club.tag)
 print(club.trophies) # total trophies
 print(club.required) # required trophies
 print(club.type) # this will print either: open, inviteOnly, closed, unknown

@@ -1,26 +1,41 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, TypedDict
+from http import HTTPStatus
 import time
 import requests
 
-class APIError(Exception):
-    def __init__(self, status_code: int, message: str, *, response_text: str | None = None):
-        super().__init__(f'API Error: {status_code} - {message}')
-        self.status_code = status_code
-        self.response_text = response_text
+from .exceptions import APIError, NotFound, Unauthorized, RateLimited
 
-class NotFound(APIError):
-    pass
+# [NEW] TypedDict Classes
 
-class Unauthorized(APIError):
-    pass
+class ClubSummaryData(TypedDict, total = False):
+    tag: str | None
+    name: str | None
 
-class RateLimited(APIError):
-    def __init__(self, status_code: int, message: str, retry_after: float | None):
-        super().__init__(status_code, message)
-        self.retry_after = retry_after
+
+class PlayerData(TypedDict, total = False):
+    tag: str | None
+    name: str | None
+    trophies: int | None
+    highestTrophies: int | None
+    expLevel: int | None
+    club: ClubSummaryData | None
+    soloVictories: int | None
+
+
+class ClubData(TypedDict, total = False):
+    tag: str | None
+    name: str | None
+    trophies: int | None
+    requiredTrophies: int | None
+    type: str | None
+    description: str | None
+
+
+
+# Dataclasses
 
 @dataclass(slots = True)
 class ClubSummary:
@@ -28,7 +43,7 @@ class ClubSummary:
     name: str | None
 
     @classmethod
-    def from_api(cls, data: dict[str, Any]) -> "ClubSummary":
+    def from_api(cls, data: ClubSummaryData) -> "ClubSummary":
         return cls(
             tag = data.get("tag"),
             name = data.get("name")
@@ -41,11 +56,11 @@ class Player:
     trophies: int | None
     highest: int | None
     explevel: int | None
-    club: Optional[ClubSummary]
+    club: ClubSummary | None
     solo: int | None
 
     @classmethod
-    def from_api(cls, data: dict[str, Any]) -> "Player":
+    def from_api(cls, data: PlayerData) -> "Player":
         club_data = data.get("club")
         return cls(
             tag=data.get("tag"),
@@ -67,7 +82,7 @@ class Club:
     description: str | None
 
     @classmethod
-    def from_api(cls, data: dict[str, Any]) -> "Club":
+    def from_api(cls, data: ClubData) -> "Club":
         return cls(
             tag=data.get("tag"),
             name=data.get("name"),
@@ -117,11 +132,11 @@ class BSClient:
             except requests.RequestException as e:
                 raise APIError(f"Network error: {e}") from e
 
-            if resp.status_code == 200:
+            if resp.status_code == HTTPStatus.OK: # was 200
                 return resp.json()
 
             # Rate limit
-            if resp.status_code == 429:
+            if resp.status_code == HTTPStatus.TOO_MANY_REQUESTS: # was 429
                 retry_after = resp.headers.get("Retry-After")
                 if retry_after:
                     try:
@@ -135,12 +150,12 @@ class BSClient:
                     time.sleep(ra + 0.1)
                     continue
 
-                raise RateLimited(429, "Rate limited", retry_after = ra)
+                raise RateLimited(int(HTTPStatus.TOO_MANY_REQUESTS), "Rate limited", retry_after = ra)
 
             # Other common statuses
-            if resp.status_code == 404:
-                raise NotFound(404, "Not found", response_text=resp.text)
-            if resp.status_code in (401, 403):
+            if resp.status_code == HTTPStatus.NOT_FOUND: # was 404
+                raise NotFound(int(HTTPStatus.NOT_FOUND), "Not found", response_text=resp.text)
+            if resp.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}: # was 401, 403
                 raise Unauthorized(resp.status_code, "Unauthorized/Forbidden", response_text=resp.text)
 
             raise APIError(resp.status_code, resp.reason, response_text=resp.text)
@@ -151,7 +166,7 @@ class BSClient:
     def __enter__(self) -> "BSClient":
         return self
     
-    def __close__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.close()
 
     def getplayer(self, tag: str) -> Player:
