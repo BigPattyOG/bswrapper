@@ -1,4 +1,4 @@
-# Brawl Stars Wrapper (BSWrapper) - v0.2.1
+# Brawl Stars Wrapper (BSWrapper) - v0.2.2
 
 ## What is BSWrapper?
 
@@ -17,7 +17,7 @@ pip install bswrapper
 ```
 or in your requirements.txt, enter it as:
 ```txt
-bswrapper>=0.2.1
+bswrapper>=0.2.2
 ```
 
 ## How to use BSWrapper
@@ -29,7 +29,7 @@ from bswrapper import BSClient
 
 bs = BSClient("API_TOKEN")
 
-player = bs.getplayer("#TAG")
+player = bs.get_player("#TAG")
 
 print(player.name)
 print(player.tag)
@@ -50,7 +50,7 @@ from bswrapper import BSClient
 
 bs = BSClient("API_TOKEN")
 
-club = bs.getclub("#TAG")
+club = bs.get_club("#TAG")
 
 print(club.name)
 print(club.tag)

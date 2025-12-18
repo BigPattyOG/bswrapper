@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from .bswrapper import BSClient, Player, Club, ClubSummary
-from .exceptions import APIError, Unauthorized, RateLimited, NotFound
+from .bswrapper import BSClient, Club, ClubSummary, Player
+from .exceptions import APIError, NotFound, RateLimited, Unauthorized
 
 __all__ = [
     "BSClient",
