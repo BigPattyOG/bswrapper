@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bswrapper"
-version = "0.1.2"
+version = "0.2.1"
 authors = [{ name = "BigPattyOG", email = "ptfaint@gmail.com" }]
 description = "An easy to use API Wrapper for the Brawl Stars API"
 readme = "README.md"
